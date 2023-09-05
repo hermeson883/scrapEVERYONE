@@ -11,9 +11,20 @@ class QuotesSpider(scrapy.Spider):
         json_response = json.loads(response.body)
         quotes = json_response.get('quotes')
         for quote in quotes:
-            data = {
-                'author': quote['author']['name'],
-                'text' : quote['text'],
-                'tag' : quote['tags']
+            yield{
+                'author': quote.get('author').get('name'),
+                'quotes' : quote.get('text'),
+                'tags' : quote.get('tags'),
             }
-            yield data
+
+
+        has_next = json_response.get('has_next')
+        if has_next:
+            next_page_number = json_response.get('page') + 1
+            yield scrapy.Request(
+                url=f'https://quotes.toscrape.com/api/quotes?page={next_page_number}',
+                callback= self.parse
+            )
+
+
+
